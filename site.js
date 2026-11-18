@@ -14,6 +14,14 @@ const labelEntries = Array.from(document.querySelectorAll('[data-label-en]'), el
 
 const switcher = document.querySelector('.language-switch');
 const languageButtons = Array.from(switcher.querySelectorAll('[data-language]'));
+const copyEmail = document.querySelector('[data-copy-email]');
+const emailAddress = document.querySelector('.email-address');
+const contactStatus = document.querySelector('.contact-status');
+const copyFeedback = {
+  copied: { ar: 'نُسخ الإيميل.', en: 'Email copied.' },
+  blocked: { ar: 'تقدر تحدد الإيميل وتنسخه يدويًا.', en: 'Select the email address to copy it manually.' },
+};
+let feedback = null;
 const titles = {
   ar: 'معاذ المطيري | الموقع الشخصي',
   en: 'Muath Al-Mutairi | Personal Portfolio',
@@ -27,6 +35,7 @@ function setLanguage(language) {
 
   for (const entry of textEntries) entry.element.textContent = entry[language];
   for (const entry of labelEntries) entry.element.setAttribute('aria-label', entry[language]);
+  if (feedback) contactStatus.textContent = copyFeedback[feedback][language];
   for (const button of languageButtons) {
     button.setAttribute('aria-pressed', String(button.dataset.language === language));
   }
@@ -51,3 +60,16 @@ for (const button of languageButtons) {
 setLanguage(languageFromUrl());
 switcher.hidden = false;
 window.addEventListener('popstate', () => setLanguage(languageFromUrl()));
+
+if (window.isSecureContext && navigator.clipboard?.writeText) {
+  copyEmail.hidden = false;
+  copyEmail.addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(emailAddress.textContent.trim());
+      feedback = 'copied';
+    } catch {
+      feedback = 'blocked';
+    }
+    contactStatus.textContent = copyFeedback[feedback][document.documentElement.lang];
+  });
+}
